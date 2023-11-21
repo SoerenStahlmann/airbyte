@@ -117,6 +117,14 @@ The Bing Ads source connector supports the following streams. For more informati
 - [Keyword Labels](https://learn.microsoft.com/en-us/advertising/bulk-service/keyword-label?view=bingads-13)
 - [Labels](https://learn.microsoft.com/en-us/advertising/bulk-service/label?view=bingads-13)
 
+:::info
+
+Accounts stream supports semi-incremental sync mode. This means that all records where LastModifiedTime value less than LastModifiedTime from 
+the most recent record will be skipped. Only records where LastModifiedTime is equal or greater than
+LastModifiedTime in most recent record will be synced.
+
+:::
+
 ### Report Streams
 
 - [Account Performance Report Hourly](https://docs.microsoft.com/en-us/advertising/reporting-service/accountperformancereportrequest?view=bingads-13)
@@ -224,6 +232,7 @@ The Bing Ads API limits the number of requests for all Microsoft Advertising cli
 
 | Version | Date       | Pull Request                                                                                                                     | Subject                                                                                                                                         |
 |:--------|:-----------|:---------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------|
+| 2.1.0   | 2023-11-21 |                                                                                                                                  | Accounts stream: add incremental sync mode                                                                                                      |
 | 2.0.1   | 2023-11-16 | [32597](https://github.com/airbytehq/airbyte/pull/32597)                                                                         | Fix start date parsing from stream state                                                                                                        |
 | 2.0.0   | 2023-11-07 | [31995](https://github.com/airbytehq/airbyte/pull/31995)                                                                         | Schema update for Accounts, Campaigns and Search Query Performance Report streams.  Convert `date` and `date-time` fields to standard `RFC3339` |
 | 1.13.0  | 2023-11-13 | [32306](https://github.com/airbytehq/airbyte/pull/32306)                                                                         | Add Custom reports and decrease backoff max tries number                                                                                        |
