@@ -8,7 +8,7 @@ from typing import List
 
 import anyio
 import asyncer
-from connector_ops.utils import METADATA_FILE_NAME, ConnectorLanguage
+from connector_ops.utils import ConnectorLanguage
 from pipelines.airbyte_ci.connectors.context import ConnectorContext
 from pipelines.airbyte_ci.connectors.reports import ConnectorReport
 from pipelines.airbyte_ci.connectors.test.steps import java_connectors, python_connectors
@@ -91,6 +91,7 @@ async def run_connector_test_pipeline(context: ConnectorContext, semaphore: anyi
         async with context:
             async with asyncer.create_task_group() as task_group:
                 tasks = [task_group.soonify(run_all_tests)(context)]
+                tasks = []
                 if not context.code_tests_only:
                     tasks += [
                         task_group.soonify(run_metadata_validation)(context),

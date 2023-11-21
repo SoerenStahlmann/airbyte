@@ -145,7 +145,6 @@ class PytestStep(Step, ABC):
                 self.context,
                 # Reset the entrypoint to run non airbyte commands
                 built_connector_container.with_entrypoint([]),
-                str(self.context.connector.code_directory),
                 additional_dependency_groups=extra_dependencies_names,
             )
         )
@@ -223,5 +222,4 @@ async def run_all_tests(context: ConnectorContext) -> List[StepResult]:
             task_group.soonify(AcceptanceTests(context, context.concurrent_cat).run)(connector_container),
             task_group.soonify(CheckBaseImageIsUsed(context).run)(),
         ]
-
     return step_results + [task.value for task in tasks]

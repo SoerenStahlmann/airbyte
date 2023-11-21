@@ -30,6 +30,7 @@ METADATA_FILE_NAME = "metadata.yaml"
 METADATA_ICON_FILE_NAME = "icon.svg"
 DIFF_FILTER = "MADRT"  # Modified, Added, Deleted, Renamed, Type changed
 IGNORED_FILE_EXTENSIONS = [".md"]
+ACCEPTANCE_TEST_CONFIG_FILE_NAME = "acceptance-test-config.yml"
 
 
 # This utils will probably be redundant once https://github.com/dagger/dagger/issues/3764 is implemented

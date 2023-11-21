@@ -615,21 +615,43 @@ def _get_relative_connector_folder_name_from_metadata_path(metadata_file_path: s
     return metadata_file_path
 
 
-def get_all_connectors_in_repo() -> Set[Connector]:
-    """Retrieve a set of all Connectors in the repo.
+def get_all_connectors_in_directory(directory: str, ignore_glob: Optional[List[str]] = None) -> Set[Connector]:
+    """Retrieve a set of all Connectors in a directory, searches subdirectories.
+    We globe the connectors folder for metadata.yaml files and construct Connectors from the directory name.
+
+    Args:
+        directory (str): The directory to search for connectors.
+        ignore_glob (List[str]): Ignore connectors that match the given glob.
+    Returns:
+        A set of Connectors.
+    """
+
+    def is_ignored(metadata_file):
+        if ignore_glob is None:
+            return False
+        for _glob in ignore_glob:
+            if _glob in metadata_file:
+                return True
+        return False
+
+    return {
+        Connector(_get_relative_connector_folder_name_from_metadata_path(metadata_file))
+        for metadata_file in glob(f"{directory}/**/metadata.yaml", recursive=True)
+        if not is_ignored(metadata_file)
+    }
+
+
+# TODO: shall this move to pipelines or stay here?
+def get_all_connectors_in_airbyte_repo() -> Set[Connector]:
+    """Retrieve a set of all Connectors in the Airbyte repo, searches subdirectories.
     We globe the connectors folder for metadata.yaml files and construct Connectors from the directory name.
 
     Returns:
         A set of Connectors.
     """
     repo = git.Repo(search_parent_directories=True)
-    repo_path = repo.working_tree_dir
-
-    return {
-        Connector(_get_relative_connector_folder_name_from_metadata_path(metadata_file))
-        for metadata_file in glob(f"{repo_path}/{CONNECTOR_PATH_PREFIX}/**/metadata.yaml", recursive=True)
-        if SCAFFOLD_CONNECTOR_GLOB not in metadata_file
-    }
+    connector_directory_path = f"{repo.working_tree_dir}/{CONNECTOR_PATH_PREFIX}"
+    return get_all_connectors_in_directory(connector_directory_path, ignore_glob=[SCAFFOLD_CONNECTOR_GLOB])
 
 
 class ConnectorTypeEnum(str, Enum):
