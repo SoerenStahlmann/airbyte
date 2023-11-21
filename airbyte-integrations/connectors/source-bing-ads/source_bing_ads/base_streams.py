@@ -161,6 +161,8 @@ class Accounts(BingAdsStream):
     additional_fields: str = "TaxCertificate AccountMode"
     # maximum page size
     page_size_limit: int = 1000
+    cursor_field = "LastModifiedTime"
+    _state = {}
 
     def next_page_token(self, response: sudsobject.Object, current_page_token: Optional[int]) -> Optional[Mapping[str, Any]]:
         current_page_token = current_page_token or 0
@@ -192,6 +194,50 @@ class Accounts(BingAdsStream):
             "Predicates": predicates,
             "ReturnAdditionalFields": self.additional_fields,
         }
+
+    @property
+    def state(self) -> Mapping[str, Any]:
+        return self._state
+
+    @state.setter
+    def state(self, value: Mapping[str, Any]):
+        current_state_value = self._state.get(self.cursor_field, "")
+        if record_state_value := value[self.cursor_field]:
+            new_state_value = max(current_state_value, record_state_value)
+            self._state.update({self.cursor_field: new_state_value})
+
+    def read_records(
+        self,
+        sync_mode: SyncMode,
+        stream_slice: Mapping[str, Any] = None,
+        stream_state: Mapping[str, Any] = None,
+        **kwargs: Mapping[str, Any],
+    ) -> Iterable[Mapping[str, Any]]:
+        stream_state = stream_state or {}
+        next_page_token = None
+        account_id = str(stream_slice.get("account_id")) if stream_slice else None
+        customer_id = str(stream_slice.get("customer_id")) if stream_slice else None
+
+        while True:
+            params = self.request_params(
+                stream_state=stream_state,
+                stream_slice=stream_slice,
+                next_page_token=next_page_token,
+                account_id=account_id,
+            )
+            response = self.send_request(params, customer_id=customer_id, account_id=account_id)
+            for record in self.parse_response(response):
+                record = self.transform(record, stream_slice)
+                if sync_mode == SyncMode.incremental:
+                    if self.state.get(self.cursor_field, "") <= record.get(self.cursor_field):
+                        yield record
+                        self.state = record
+                else:
+                    yield record
+
+            next_page_token = self.next_page_token(response, current_page_token=next_page_token)
+            if not next_page_token:
+                break
 
 
 class Campaigns(BingAdsCampaignManagementStream):
